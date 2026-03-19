@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 
-# Environment Secrets
+# Environment Secrets (CRITICAL)
 .env
 
 # System Files
