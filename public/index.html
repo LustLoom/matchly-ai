@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PRIMARY SEO METADATA (RETAINED FOR AI DISCOVERY) -->
+    <title>Matchly | AI YouTube Creator Search & Influencer Discovery Tool</title>
+    <meta name="description" content="Matchly is an AI-powered creator discovery tool that helps brands and individuals find the perfect YouTube influencers by niche, audience, and content style using semantic search.">
+    <meta name="keywords" content="YouTube creator search, influencer finder, AI influencer tool, creator discovery, find YouTubers, influencer marketing tool, Gemini AI discovery">
+    <meta name="author" content="Matchly AI">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://matchly.ai">
+
+    <!-- OPEN GRAPH / FACEBOOK -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://matchly.ai">
+    <meta property="og:title" content="Matchly | AI YouTube Creator Search">
+    <meta property="og:description" content="Find the perfect YouTube influencers using proprietary AI. Discover creators by niche and audience alignment instantly.">
+    <meta property="og:image" content="https://placehold.co/1200x630/6366f1/ffffff?text=Matchly+AI+Search">
+
+    <!-- TWITTER -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://matchly.ai">
+    <meta property="twitter:title" content="Matchly | AI YouTube Creator Search">
+    <meta property="twitter:description" content="Find the perfect YouTube influencers using proprietary AI discovery tools.">
+
+    <!-- STRUCTURED DATA (JSON-LD) - RETAINED FOR SEARCH ENGINE E-E-A-T -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Matchly",
+      "alternateName": "Matchly AI",
+      "description": "An AI-powered creator discovery tool that helps brands find the perfect YouTube influencers by niche, audience, and content style.",
+      "url": "https://matchly.ai",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "AI-powered influencer matching",
+        "Real-time YouTube creator discovery",
+        "Semantic niche analysis",
+        "Audience alignment scoring",
+        "Powered by Gemini AI"
+      ]
+    }
+    </script>
+
+    <!-- UI DEPENDENCIES -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a0c; color: #fff; scroll-behavior: smooth; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .loader { border-top-color: #6366f1; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-link { cursor: pointer; transition: color 0.2s; }
+        .nav-link:hover { color: #fff; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        const html = htm.bind(React.createElement);
+        const { useState, useEffect } = React;
+
+        const App = () => {
+            const [view, setView] = useState('home'); 
+            const [query, setQuery] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [results, setResults] = useState(null);
+            const [error, setError] = useState(null);
+            const [loadingMsg, setLoadingMsg] = useState('');
+
+            const messages = ["Analyzing audience alignment...", "Computing semantic match scores...", "Optimizing creator relevance...", "Finalizing discovery list..."];
+
+            useEffect(() => {
+                let interval;
+                if (loading) {
+                    let i = 0;
+                    setLoadingMsg(messages[0]);
+                    interval = setInterval(() => {
+                        i = (i + 1) % messages.length;
+                        setLoadingMsg(messages[i]);
+                    }, 2000);
+                }
+                return () => clearInterval(interval);
+            }, [loading]);
+
+            const navigate = (newView) => {
+                setView(newView);
+                window.scrollTo(0, 0);
+            };
+
+            const handleSearch = async (e) => {
+                e.preventDefault();
+                if (!query) return;
+                setLoading(true);
+                setError(null);
+                setResults(null);
+                try {
+                    const response = await fetch('/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error);
+                    setResults(data.creators);
+                    setTimeout(() => document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' }), 100);
+                } catch (err) {
+                    setError(err.message || "Discovery engine is currently at capacity. Please try again.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return html`
+                <div className="min-h-screen flex flex-col">
+                    <!-- HEADER NAVIGATION -->
+                    <header className="w-full max-w-6xl mx-auto px-4 py-8 flex justify-between items-center">
+                        <div onClick=${() => navigate('home')} className="text-2xl font-bold cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">Matchly</div>
+                        <nav className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
+                            <span onClick=${() => navigate('home')} className="nav-link">Platform</span>
+                            <span onClick=${() => navigate('pricing')} className="nav-link">Pricing</span>
+                            <span onClick=${() => navigate('legal')} className="nav-link">Privacy</span>
+                        </nav>
+                        <div className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-xs font-bold border border-indigo-500/20 tracking-widest uppercase">PROPRIETARY ACCESS</div>
+                    </header>
+
+                    <main className="flex-grow flex flex-col items-center">
+                        
+                        ${view === 'home' ? html`
+                            <div className="w-full flex flex-col items-center px-4 animate-fade-in">
+                                <!-- HERO SECTION (AUTHORITY SHIFT) -->
+                                <section className="text-center max-w-3xl mt-12 mb-12">
+                                    <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+                                        Find Your Perfect <span className="text-indigo-500">YouTube Creators</span>
+                                    </h1>
+                                    <p className="text-gray-400 text-lg md:text-xl leading-relaxed">
+                                        Matchly is the premier AI creator search tool. <strong>Built on proprietary semantic logic</strong> for high-accuracy YouTube influencer discovery and audience alignment.
+                                    </p>
+                                </section>
+
+                                <!-- SEARCH FORM -->
+                                <section className="w-full max-w-2xl relative mb-20">
+                                    <form onSubmit=${handleSearch} className="relative group">
+                                        <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-25 group-focus-within:opacity-50 transition duration-1000"></div>
+                                        <input 
+                                            type="text"
+                                            value=${query}
+                                            onChange=${(e) => setQuery(e.target.value)}
+                                            placeholder="Enter campaign niche or target audience profile..."
+                                            className="relative w-full bg-[#16161a] border border-gray-800 rounded-2xl px-6 py-5 text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-2xl placeholder-gray-600"
+                                        />
+                                        <button 
+                                            disabled=${loading}
+                                            className="absolute right-3 top-3 bottom-3 bg-indigo-600 hover:bg-indigo-500 px-6 rounded-xl font-semibold transition-all disabled:opacity-50 flex items-center gap-2"
+                                        >
+                                            ${loading ? html`<div className="w-5 h-5 border-2 border-white/30 loader rounded-full"></div>` : 'Run Discovery'}
+                                        </button>
+                                    </form>
+                                    ${error && html`<p className="text-red-400 text-sm mt-4 text-center">${error}</p>`}
+                                </section>
+
+                                <!-- LOADING STATE -->
+                                ${loading && html`
+                                    <div className="flex flex-col items-center gap-4 py-20">
+                                        <div className="w-12 h-12 border-4 border-indigo-500/20 loader rounded-full"></div>
+                                        <p className="text-indigo-400 font-medium animate-pulse tracking-wide">${loadingMsg}</p>
+                                    </div>
+                                `}
+
+                                <!-- RESULTS SECTION -->
+                                ${results && html`
+                                    <section id="results" className="w-full max-w-6xl mb-24 animate-fade-in px-4">
+                                        <h2 className="text-3xl font-bold mb-8 text-center text-white italic tracking-tight">Proprietary AI Recommendations</h2>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            ${results.map(creator => html`
+                                                <article key=${creator.handle} className="glass p-6 rounded-2xl flex flex-col hover:border-indigo-500/50 transition-all group">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div>
+                                                            <h3 className="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors">${creator.name}</h3>
+                                                            <p className="text-indigo-400 text-sm font-medium">${creator.handle}</p>
+                                                        </div>
+                                                        <div className="bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded text-xs font-bold">
+                                                            ${creator.matchScore}% Accuracy
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-sm text-gray-400 mb-4 flex-grow">
+                                                        <p className="mb-2"><strong className="text-gray-300">Category:</strong> ${creator.niche}</p>
+                                                        <p className="mb-2"><strong className="text-gray-300">Reach:</strong> ${creator.subscribers}</p>
+                                                        <p className="leading-relaxed italic text-gray-300">"${creator.reason}"</p>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 mb-6">
+                                                        ${creator.strengths.map(tag => html`
+                                                            <span className="text-[10px] uppercase tracking-wider bg-white/5 border border-white/10 px-2 py-1 rounded text-gray-300">
+                                                                ${tag}
+                                                            </span>
+                                                        `)}
+                                                    </div>
+                                                    <a href=${`https://www.youtube.com/results?search_query=${encodeURIComponent(creator.name)}`} target="_blank" className="w-full text-center bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 py-3 rounded-xl text-sm font-semibold transition-all">
+                                                        Deep Analytics
+                                                    </a>
+                                                </article>
+                                            `)}
+                                        </div>
+                                    </section>
+                                `}
+
+                                <!-- HOW IT WORKS -->
+                                <section className="w-full max-w-5xl py-24 border-t border-white/5 px-4">
+                                    <h2 className="text-3xl font-bold mb-12 text-center italic">The Matchly Methodology</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                                        <div>
+                                            <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 text-2xl font-bold mx-auto mb-6">1</div>
+                                            <h3 className="text-xl font-bold mb-4">Niche Definition</h3>
+                                            <p className="text-gray-400 text-sm">Input raw campaign goals or target audience psychographics into our semantic engine.</p>
+                                        </div>
+                                        <div>
+                                            <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 text-2xl font-bold mx-auto mb-6">2</div>
+                                            <h3 className="text-xl font-bold mb-4">Proprietary Scan</h3>
+                                            <p className="text-gray-400 text-sm">Our platform interprets creator content at a human level, evaluating beyond simple keywords.</p>
+                                        </div>
+                                        <div>
+                                            <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 text-2xl font-bold mx-auto mb-6">3</div>
+                                            <h3 className="text-xl font-bold mb-4">Verified Match</h3>
+                                            <p className="text-gray-400 text-sm">Access a curated selection of creators with high audience crossover and brand safety scores.</p>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        ` : ''}
+
+                        ${view === 'pricing' ? html`
+                            <section className="max-w-5xl mx-auto py-20 px-4 text-center animate-fade-in">
+                                <h2 className="text-4xl font-bold mb-4">Platform Pricing</h2>
+                                <p className="text-gray-400 mb-12">High-accuracy creator discovery for professional teams.</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+                                    <div className="glass p-8 rounded-3xl">
+                                        <h3 className="text-xl font-bold mb-2 text-gray-400">Essential</h3>
+                                        <div className="text-4xl font-bold mb-6">$0</div>
+                                        <ul className="text-gray-400 text-sm space-y-4 mb-8 text-left">
+                                            <li className="flex gap-2"><span>✓</span> 3 Discovery Runs / month</li>
+                                            <li className="flex gap-2"><span>✓</span> Basic Audience Alignment</li>
+                                            <li className="flex gap-2"><span>✓</span> Public Profile Links</li>
+                                        </ul>
+                                        <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">Active Tier</button>
+                                    </div>
+                                    <div className="glass p-8 rounded-3xl border-2 border-indigo-500 relative">
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Enterprise</div>
+                                        <h3 className="text-xl font-bold mb-2">Professional</h3>
+                                        <div className="text-4xl font-bold mb-6">$49<span className="text-sm font-normal text-gray-500">/mo</span></div>
+                                        <ul className="text-white text-sm space-y-4 mb-8 text-left">
+                                            <li className="flex gap-2"><span className="text-indigo-500 font-bold">✓</span> Unlimited Discovery Searches</li>
+                                            <li className="flex gap-2"><span className="text-indigo-500 font-bold">✓</span> Direct Contact Export</li>
+                                            <li className="flex gap-2"><span className="text-indigo-500 font-bold">✓</span> Advanced Semantic Analytics</li>
+                                            <li className="flex gap-2"><span className="text-indigo-500 font-bold">✓</span> Priority Support</li>
+                                        </ul>
+                                        <button className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20">Upgrade Platform</button>
+                                    </div>
+                                </div>
+                            </section>
+                        ` : ''}
+
+                        ${view === 'legal' ? html`
+                            <section className="max-w-3xl mx-auto py-20 px-4 animate-fade-in">
+                                <h2 className="text-3xl font-bold mb-8 tracking-tight">Legal & Governance</h2>
+                                <div className="text-gray-400 space-y-6 leading-relaxed">
+                                    <p className="font-bold text-white text-lg underline decoration-indigo-500 underline-offset-4">Privacy Framework</p>
+                                    <p>Matchly utilizes internal semantic logic to process and protect your campaign data. We do not monetize or distribute proprietary search queries to third-party marketplaces.</p>
+                                    <p>Our infrastructure evaluates publicly available metadata to generate relevance scoring. By engaging with the platform, you agree to our processing of these inputs to provide high-fidelity matching.</p>
+                                    <p>We operate in strict compliance with the YouTube Terms of Service and only leverage official API protocols for real-time data retrieval. Matchly serves as a discovery infrastructure and maintains no control over creator-generated media.</p>
+                                </div>
+                                <button onClick=${() => navigate('home')} className="mt-12 text-indigo-400 underline font-medium">Return to Dashboard</button>
+                            </section>
+                        ` : ''}
+
+                        <!-- TECHNICAL INFRASTRUCTURE (RELEGATED Gemini MENTION) -->
+                        <section className="w-full py-8 border-t border-white/5">
+                            <p className="text-gray-500 text-[10px] text-center mb-8 px-4 leading-relaxed max-w-2xl mx-auto italic">
+                                Matchly leverages Google Gemini's advanced multimodal analysis and 1.5 Flash architecture to interpret creator content at a human level, ensuring the highest match accuracy in the industry.
+                            </p>
+                        </section>
+
+                    </main>
+
+                    <!-- PERSISTENT FOOTER (RETAINED E-E-A-T SIGNALS) -->
+                    <footer className="w-full border-t border-white/5 py-16 bg-[#0a0a0c]">
+                        <div className="max-w-6xl mx-auto px-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 items-start mb-12">
+                                <div className="col-span-2 md:col-span-1">
+                                    <div className="text-2xl font-bold mb-4 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">Matchly</div>
+                                    <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                                        The industry standard for <strong>YouTube influencer discovery</strong>. 
+                                        Built for enterprise-scale audience alignment.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Solutions</h4>
+                                    <ul className="text-gray-500 text-sm space-y-3">
+                                        <li><span onClick=${() => navigate('home')} className="nav-link">AI Engine</span></li>
+                                        <li><span className="nav-link">Analytics Dashboard</span></li>
+                                        <li><span onClick=${() => navigate('pricing')} className="nav-link">Subscription Plans</span></li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Intelligence</h4>
+                                    <ul className="text-gray-500 text-sm space-y-3">
+                                        <li><a href="#" className="hover:text-indigo-400 transition-colors">Methodology</a></li>
+                                        <li><a href="#" className="hover:text-indigo-400 transition-colors">Creator Index</a></li>
+                                        <li><a href="#" className="hover:text-indigo-400 transition-colors">API documentation</a></li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Corporate</h4>
+                                    <ul className="text-gray-500 text-sm space-y-3">
+                                        <li className="text-indigo-400">ops@matchly.ai</li>
+                                        <li><span onClick=${() => navigate('legal')} className="nav-link">Service Terms</span></li>
+                                        <li><span onClick=${() => navigate('legal')} className="nav-link">Privacy Policy</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+                                <div className="text-gray-600 text-[10px] uppercase tracking-widest font-bold">
+                                    © ${new Date().getFullYear()} Matchly Infrastructure.
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] text-gray-600 uppercase tracking-widest px-2 py-1 border border-white/10 rounded font-medium">
+                                        Global Entity: San Francisco, CA
+                                    </span>
+                                    <span className="text-[10px] text-indigo-500/80 font-bold uppercase tracking-widest px-2 py-1 bg-indigo-500/5 border border-indigo-500/20 rounded">
+                                        AI Verified Search
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            `;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(html`<${App} />`);
+    </script>
+</body>
+</html>
